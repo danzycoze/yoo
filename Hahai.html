@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Quiz Mobile Legends</title>
+<style>
+  body {
+    background-color: #121212;
+    color: white;
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    text-align: center;
+  }
+  input, button {
+    padding: 10px;
+    margin: 5px;
+    border-radius: 5px;
+    border: none;
+  }
+  .question {
+    font-size: 20px;
+    margin-bottom: 20px;
+  }
+  .option {
+    background-color: #1f1f1f;
+    color: white;
+    padding: 10px;
+    margin: 10px;
+    border: 2px solid #333;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  .option.correct {
+    background-color: green;
+  }
+  .option.wrong {
+    background-color: red;
+  }
+  #score {
+    margin-top: 20px;
+    font-size: 18px;
+  }
+  #rankImg {
+    margin-top: 20px;
+    width: 150px;
+    height: auto;
+  }
+  #retryBtn, #startBtn {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #333;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  #retryBtn:hover, #startBtn:hover {
+    background-color: #555;
+  }
+  #credit {
+    margin-top: 40px;
+    font-size: 14px;
+    color: gray;
+  }
+  table {
+    margin-top: 20px;
+    width: 100%;
+    border-collapse: collapse;
+  }
+  th, td {
+    border: 1px solid gray;
+    padding: 8px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Quiz Mobile Legends</h1>
+<div id="formDiv">
+  <p>Masukkan data diri untuk leaderboard:</p>
+  <input type="text" id="nama" placeholder="Nama"><br>
+  <input type="text" id="kelas" placeholder="Kelas"><br>
+  <input type="number" id="umur" placeholder="Umur"><br>
+  <input type="text" id="idml" placeholder="ID Mobile Legends"><br>
+  <button id="startBtn" onclick="startQuiz()">Mulai Quiz</button>
+</div>
+
+<div id="quizDiv" style="display:none;">
+  <div class="question" id="question"></div>
+  <div id="options"></div>
+  <div id="score"></div>
+  <img id="rankImg" src="" alt="">
+  <div id="rankText"></div>
+  <button id="retryBtn" onclick="retryQuiz()">Main Ulang</button>
+</div>
+
+<div id="leaderboard"></div>
+<div id="credit">Dibuat oleh Danzy dan ChatGPT</div>
+
+<script>
+const questions = [
+  { question: "Apa counter item hero mage burst damage?", options: ["Athena", "Radiant Armor", "Oracle", "Cursed Helmet"], answer: "Athena" },
+  { question: "Jika hero lawan banyak life steal dan attack speed apa item counternya?", options: ["Dominanice", "Athena", "Antique Cuirass", "Sea Halberd"], answer: "Dominanice" },
+  { question: "Apa counter hero yang hanya mengandalkan basic attack?", options: ["Belerick", "Khufra", "Tigreal", "Carmila"], answer: "Belerick" },
+  { question: "Hero apa yang cocok untuk mengcounter hero dash/blink?", options: ["Minisitharr", "Franco", "Jhonson", "Tigreal"], answer: "Minisitharr" },
+  { question: "Manakah hero berikut yang di pakai drak sistem?", options: ["Yin", "Granger", "Ling", "Joy"], answer: "Yin" }
+];
+
+let leaderboard = [
+  { nama: "Danzy", kelas: "11", umur: 17, idml: "559578592", skor: 999 }
+];
+
+let userData = {};
+let score = 0;
+let currentQuestion = 0;
+
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
+function startQuiz() {
+  const nama = document.getElementById('nama').value;
+  const kelas = document.getElementById('kelas').value;
+  const umur = document.getElementById('umur').value;
+  const idml = document.getElementById('idml').value;
+
+  if (!nama || !kelas || !umur || !idml) {
+    alert("Semua data diri harus diisi!");
+    return;
+  }
+
+  userData = { nama, kelas, umur, idml };
+
+  document.getElementById('formDiv').style.display = 'none';
+  document.getElementById('quizDiv').style.display = 'block';
+
+  shuffle(questions);
+  score = 0;
+  currentQuestion = 0;
+  loadQuestion();
+}
+
+function loadQuestion() {
+  document.getElementById('score').innerText = `Skor: ${score}`;
+  document.getElementById('rankImg').src = '';
+  document.getElementById('rankText').innerText = '';
+  document.getElementById('retryBtn').style.display = 'none';
+
+  if (currentQuestion >= questions.length) {
+    showRank();
+    return;
+  }
+
+  const q = questions[currentQuestion];
+  document.getElementById('question').innerText = q.question;
+
+  const shuffledOptions = [...q.options];
+  shuffle(shuffledOptions);
+
+  const optionsDiv = document.getElementById('options');
+  optionsDiv.innerHTML = '';
+
+  shuffledOptions.forEach(option => {
+    const btn = document.createElement('div');
+    btn.classList.add('option');
+    btn.innerText = option;
+    btn.onclick = () => checkAnswer(btn, option);
+    optionsDiv.appendChild(btn);
+  });
+}
+
+function checkAnswer(button, selected) {
+  const q = questions[currentQuestion];
+  const optionsButtons = document.querySelectorAll('.option');
+
+  optionsButtons.forEach(btn => btn.onclick = null);
+
+  if (selected === q.answer) {
+    button.classList.add('correct');
+    score += 20;
+  } else {
+    button.classList.add('wrong');
+    optionsButtons.forEach(btn => {
+      if (btn.innerText === q.answer) {
+        btn.classList.add('correct');
+      }
+    });
+  }
+
+  setTimeout(() => {
+    currentQuestion++;
+    loadQuestion();
+  }, 1500);
+}
+
+function showRank() {
+  let rankImg = document.getElementById('rankImg');
+  let rankText = document.getElementById('rankText');
+  if (score === 100) {
+    rankImg.src = 'https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/689827e2-f006-498a-a1e5-2c70425a2719/dee9s93-ce89942b-d758-4296-aacd-64df565f16e3.png/v1/fill/w_1280,h_1280/mobile_legends_mythic_rank_icon_vector_by_masnera_dee9s93-fullview.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzY4OTgyN2UyLWYwMDYtNDk4YS1hMWU1LTJjNzA0MjVhMjcxOVwvZGVlOXM5My1jZTg5OTQyYi1kNzU4LTQyOTYtYWFjZC02NGRmNTY1ZjE2ZTMucG5nIiwiaGVpZ2h0IjoiPD0xMjgwIiwid2lkdGgiOiI8PTEyODAifV1dLCJhdWQiOlsidXJuOnNlcnZpY2U6aW1hZ2Uud2F0ZXJtYXJrIl0sIndtayI6eyJwYXRoIjoiXC93bVwvNjg5ODI3ZTItZjAwNi00OThhLWExZTUtMmM3MDQyNWEyNzE5XC9tYXNuZXJhLTQucG5nIiwib3BhY2l0eSI6OTUsInByb3BvcnRpb25zIjowLjQ1LCJncmF2aXR5IjoiY2VudGVyIn19.XrwTKbXfiBxbkoJDFgiGwv-eM0yKHmdikdOrbmwrdfs';
+    rankText.innerText = 'Selamat! Rank Anda Mytich++';
+  } else if (score === 80) {
+    rankImg.src = 'https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/689827e2-f006-498a-a1e5-2c70425a2719/dee9r8u-c071dfe8-6560-46b2-8369-5ea61456ba78.png/v1/fill/w_1280,h_1280/mobile_legend_rank_icon__legend_rank_by_masnera_dee9r8u-fullview.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzY4OTgyN2UyLWYwMDYtNDk4YS1hMWU1LTJjNzA0MjVhMjcxOVwvZGVlOXI4dS1jMDcxZGZlOC02NTYwLTQ2YjItODM2OS01ZWE2MTQ1NmJhNzgucG5nIiwiaGVpZ2h0IjoiPD0xMjgwIiwid2lkdGgiOiI8PTEyODAifV1dLCJhdWQiOlsidXJuOnNlcnZpY2U6aW1hZ2Uud2F0ZXJtYXJrIl0sIndtayI6eyJwYXRoIjoiXC93bVwvNjg5ODI3ZTItZjAwNi00OThhLWExZTUtMmM3MDQyNWEyNzE5XC9tYXNuZXJhLTQucG5nIiwib3BhY2l0eSI6OTUsInByb3BvcnRpb25zIjowLjQ1LCJncmF2aXR5IjoiY2VudGVyIn19.ws6hM9hesUQ3W4vk7fW5K8KXnILMoiTMgdeM6KFWlx4';
+    rankText.innerText = 'Selamat! Rank Anda Legends+';
+  } else {
+    rankImg.src = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQDkPUaYDqRYqMxFhgAGBgJetkaMgVtrv2YGomZ2K3RcVTwSnjI-h4eyYA&s=10';
+    rankText.innerText = 'Selamat DRAK SISTEM! Rank Anda Epic Abadi IQ-999';
+  }
+
+  document.getElementById('score').innerText = `Skor Akhir: ${score}`;
+
+  userData.skor = score;
+  leaderboard.push(userData);
+  leaderboard.sort((a, b) => b.skor - a.skor);
+
+  showLeaderboard();
+  document.getElementById('retryBtn').style.display = 'inline-block';
+}
+
+function showLeaderboard() {
+  let lbDiv = document.getElementById('leaderboard');
+  let html = '<h2>Leaderboard</h2><table><tr><th>Nama</th><th>Kelas</th><th>Umur</th><th>ID ML</th><th>Skor</th></tr>';
+  leaderboard.forEach(user => {
+    html += `<tr><td>${user.nama}</td><td>${user.kelas}</td><td>${user.umur}</td><td>${user.idml}</td><td>${user.skor}</td></tr>`;
+  });
+  html += '</table>';
+  lbDiv.innerHTML = html;
+  
+}
+
+function retryQuiz() {
+  document.getElementById('quizDiv').style.display = 'none';
+  document.getElementById('formDiv').style.display = 'block';
+  document.getElementById('nama').value = '';
+  document.getElementById('kelas').value = '';
+  document.getElementById('umur').value = '';
+  document.getElementById('idml').value = '';
+}
+</script>
+</body>
+</html>
